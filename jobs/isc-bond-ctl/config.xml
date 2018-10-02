@@ -1,0 +1,76 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin@1.5.9">
+      <gitLabConnection>iServCloud Git</gitLabConnection>
+    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>rsync -avP ../CmtPushTarball/tarball.tgz .
+#ssh localadmin@10.50.1.51 &quot;rm -rf /NFS/isc-bond/*&quot;
+#ssh localadmin@10.50.1.51 &quot;rm -rf /NFS/isc-bond-nfs-volume/*&quot;
+ssh localadmin@10.50.1.51 &quot;/home/localadmin/clear-folder.sh isc-bond&quot;
+ssh localadmin@10.50.1.51 &quot;/home/localadmin/clear-folder.sh isc-bond-nfs-volume&quot;
+
+
+# revert all host
+sudo virsh snapshot-revert isc-bond-ctl1 1537518418
+sudo virsh snapshot-revert isc-bond-bak 1538042538
+sudo virsh snapshot-revert isc-bond-com1 1537857217
+
+# start all host
+sudo virsh start isc-bond-ctl1
+sudo virsh start isc-bond-bak
+sudo virsh start isc-bond-com1
+
+sleep 30
+
+#Install optional COM1
+rsync -avP tarball.tgz localadmin@10.50.1.62:~/
+ssh localadmin@10.50.1.62 tar xfz /home/localadmin/tarball.tgz
+rsync -avP isc-bond-ctl/allone_deploy.conf localadmin@10.50.1.62:~/conf/
+ssh -f localadmin@10.50.1.62 &quot;sudo /home/localadmin/bin/isc21_optional_ppa.sh&quot;
+
+#Install optional backup node
+rsync -avP tarball.tgz localadmin@10.50.1.64:~/
+ssh localadmin@10.50.1.64 tar xfz /home/localadmin/tarball.tgz
+rsync -avP isc-bond-ctl/allone_deploy.conf localadmin@10.50.1.64:~/conf/
+ssh -f localadmin@10.50.1.64 &quot;sudo /home/localadmin/bin/isc21_optional_ppa.sh&quot;
+
+#deploy CTL1
+rsync -avP tarball.tgz localadmin@10.50.1.61:~/
+ssh localadmin@10.50.1.61 tar xfz /home/localadmin/tarball.tgz
+rsync -avP isc-bond-ctl/allone_deploy.conf localadmin@10.50.1.61:~/conf/
+ssh localadmin@10.50.1.61 /home/localadmin/bin/util_sysid.sh ens3
+rsync -avP isc-bond-ctl/license.* localadmin@10.50.1.61:~/action/
+rsync -avP public localadmin@10.50.1.61:~/
+ssh localadmin@10.50.1.61 &quot;sudo /home/localadmin/bin/util_date.sh now&quot;
+ssh localadmin@10.50.1.61 &quot;sudo /home/localadmin/bin/isc21_install.sh isc-bond-ctl&quot;
+
+
+#Deploy COM1
+ssh localadmin@10.50.1.62 &quot;wget http://10.50.1.61:8088/home/localadmin/conf/allone_deploy.conf&quot;
+ssh localadmin@10.50.1.62 &quot;cp -pr ~/allone_deploy.conf ~/conf/&quot;
+ssh -f localadmin@10.50.1.62 &quot;sudo /home/localadmin/bin/isc21_compute_install.sh isc-bond-com1 bond0:10.50.1.62 bond1:192.168.0.62 bond2:192.168.1.62 bond3:192.168.3.62&quot;
+
+#Deploy backup node
+ssh localadmin@10.50.1.64 &quot;wget http://10.50.1.61:8088/home/localadmin/conf/allone_deploy.conf&quot;
+ssh localadmin@10.50.1.64 &quot;cp -pr ~/allone_deploy.conf ~/conf/&quot;
+ssh localadmin@10.50.1.64 &quot;sudo /home/localadmin/bin/isc21_backup_install.sh /dev/vdb isc-bond-bak 10.50.1.64 bond1:192.168.1.64&quot;
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

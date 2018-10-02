@@ -1,0 +1,95 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>10.50.0.85/iServCloud</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin@1.5.9">
+      <gitLabConnection>iServCloud Git</gitLabConnection>
+    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>rsync -avP ../CmtPushDevelopTarball/develop/tarball.tgz .
+ssh localadmin@10.50.1.51 &quot;rm -rf /NFS/U16CTL/*&quot;
+ssh localadmin@10.50.1.51 &quot;rm -rf /NFS/U16CTL_VOL/*&quot;
+
+# revert all host
+sudo virsh snapshot-revert U16CTL1 1523959630
+sudo virsh snapshot-revert U16CTL2 1523959649
+sudo virsh snapshot-revert U16COM1 1523959677
+sudo virsh snapshot-revert U16COM2 1523959698
+
+# start all host
+sudo virsh start U16CTL1
+sudo virsh start U16CTL2
+sudo virsh start U16COM1
+sudo virsh start U16COM2
+
+sleep 30
+
+#Install optional COM1
+rsync -avP tarball.tgz localadmin@10.50.0.93:~/
+ssh localadmin@10.50.0.93 tar xfz /home/localadmin/tarball.tgz
+rsync -avP U16CTL/allone_deploy.conf localadmin@10.50.0.93:~/conf/
+ssh -f localadmin@10.50.0.93 &quot;sudo /home/localadmin/bin/isc21_optional_ppa.sh&quot;
+
+
+#Install optional COM2
+rsync -avP tarball.tgz localadmin@10.50.0.94:~/
+ssh localadmin@10.50.0.94 tar xfz /home/localadmin/tarball.tgz
+rsync -avP U16CTL/allone_deploy.conf localadmin@10.50.0.94:~/conf/
+ssh -f localadmin@10.50.0.94 &quot;sudo /home/localadmin/bin/isc21_optional_ppa.sh&quot;
+
+
+
+#deploy CTL1
+rsync -avP public localadmin@10.50.0.91:~/
+rsync -avP tarball.tgz localadmin@10.50.0.91:~/
+ssh localadmin@10.50.0.91 tar xfz /home/localadmin/tarball.tgz
+rsync -avP U16CTL/allone_deploy.conf localadmin@10.50.0.91:~/conf/
+ssh localadmin@10.50.0.91 /home/localadmin/bin/util_sysid.sh ens3
+rsync -avP U16CTL/license.* localadmin@10.50.0.91:~/action/
+ssh localadmin@10.50.0.91 &quot;sudo /home/localadmin/bin/util_date.sh now&quot;
+ssh localadmin@10.50.0.91 &quot;sudo /home/localadmin/bin/isc21_install.sh U16CTL&quot;
+
+#deploy CTL2
+rsync -avP public localadmin@10.50.0.92:~/
+rsync -avP tarball.tgz localadmin@10.50.0.92:~/
+ssh localadmin@10.50.0.92 tar xfz /home/localadmin/tarball.tgz
+rsync -avP U16CTL/allone_deploy.conf localadmin@10.50.0.92:~/conf/
+ssh localadmin@10.50.0.92 /home/localadmin/bin/util_sysid.sh ens3
+rsync -avP U16CTL/license.* localadmin@10.50.0.92:~/action/
+ssh localadmin@10.50.0.92 &quot;sudo /home/localadmin/bin/util_date.sh now&quot;
+ssh -f localadmin@10.50.0.92 &quot;sudo /home/localadmin/bin/isc21_install.sh U16CTL2&quot;
+
+
+#Deploy COM1
+ssh localadmin@10.50.0.93 &quot;sudo wget http://10.50.0.91:8088/home/localadmin/conf/allone_deploy.conf&quot;
+ssh localadmin@10.50.0.93 &quot;sudo cp -pr ~/allone_deploy.conf ~/conf/&quot;
+ssh -f localadmin@10.50.0.93 &quot;sudo /home/localadmin/bin/isc21_compute_install.sh U16COM1 10.50.0.93 ens4:192.168.0.93 ens5:192.168.1.93 ens6:192.168.2.93&quot;
+
+#Deploy COM2
+ssh localadmin@10.50.0.94 &quot;sudo wget http://10.50.0.91:8088/home/localadmin/conf/allone_deploy.conf&quot;
+ssh localadmin@10.50.0.94 &quot;sudo cp -pr ~/allone_deploy.conf ~/conf/&quot;
+ssh -f localadmin@10.50.0.94 &quot;sudo /home/localadmin/bin/isc21_compute_install.sh U16COM2 10.50.0.94 ens4:192.168.0.94 ens5:192.168.1.94 ens6:192.168.2.94&quot;
+
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.Mailer plugin="mailer@1.21">
+      <recipients>demoyuw@gmail.com</recipients>
+      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
+      <sendToIndividuals>true</sendToIndividuals>
+    </hudson.tasks.Mailer>
+  </publishers>
+  <buildWrappers/>
+</project>

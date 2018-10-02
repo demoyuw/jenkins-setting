@@ -1,0 +1,88 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin@1.5.9">
+      <gitLabConnection>iServCloud Git</gitLabConnection>
+    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@3.8.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>http://10.40.1.246/root/System.git</url>
+        <credentialsId>48ea8766-5e90-495e-a14a-4daa4d33f46a</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <com.dabsquared.gitlabjenkins.GitLabPushTrigger plugin="gitlab-plugin@1.5.9">
+      <spec></spec>
+      <triggerOnPush>true</triggerOnPush>
+      <triggerOnMergeRequest>true</triggerOnMergeRequest>
+      <triggerOnPipelineEvent>false</triggerOnPipelineEvent>
+      <triggerOnAcceptedMergeRequest>false</triggerOnAcceptedMergeRequest>
+      <triggerOnClosedMergeRequest>false</triggerOnClosedMergeRequest>
+      <triggerOnApprovedMergeRequest>true</triggerOnApprovedMergeRequest>
+      <triggerOpenMergeRequestOnPush>never</triggerOpenMergeRequestOnPush>
+      <triggerOnNoteRequest>true</triggerOnNoteRequest>
+      <noteRegex>Jenkins please retry a build</noteRegex>
+      <ciSkip>true</ciSkip>
+      <skipWorkInProgressMergeRequest>true</skipWorkInProgressMergeRequest>
+      <setBuildDescription>true</setBuildDescription>
+      <branchFilterType>NameBasedFilter</branchFilterType>
+      <includeBranchesSpec>master, </includeBranchesSpec>
+      <excludeBranchesSpec></excludeBranchesSpec>
+      <targetBranchRegex></targetBranchRegex>
+      <secretToken>{AQAAABAAAAAQgC8H+nKawIbqYxfO01K2X3qMVr9XpjSga8IAkW4FLeg=}</secretToken>
+      <pendingBuildName></pendingBuildName>
+      <cancelPendingBuildsOnUpdate>false</cancelPendingBuildsOnUpdate>
+    </com.dabsquared.gitlabjenkins.GitLabPushTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+git pull http://10.40.1.246/root/System.git master
+sudo chown -R jenkins.jenkins packFolder/*
+rsync -avP ../GetWarFiles/sql packFolder/
+rsync -avP ../GetWarFiles/frontend packFolder/
+rsync -avP backend_api packFolder/backend/openstack_mitaka/
+rsync -avP backendScheduler packFolder/backend/openstack_mitaka/
+cd deploy
+rsync -avP --exclude=backend --exclude=sql --exclude=frontend * ../packFolder/
+cd ..
+rsync -avP monitor/* packFolder/monitor/Zabbix_monitor/
+rsync -avP openstack/nova/nova-stable-mitaka/* packFolder/backend/openstack_mitaka/
+rsync -avP openstack/neutron packFolder/backend/openstack_mitaka/
+rsync -avP openstack/neutron_lbaas packFolder/backend/openstack_mitaka/
+rsync -avP openstack/cinder/cinder-stable-mitaka/cinder packFolder/backend/openstack_mitaka/
+rsync -avP tools packFolder/backend/openstack_mitaka/
+rsync -avP VM_Backup packFolder/backend/openstack_mitaka/
+cd packFolder
+rsync -avP ../../tar.sh .
+rm -f tarball.tgz
+mkdir log
+mkdir action
+sudo chown -R localadmin.localadmin *
+sudo chmod -R 755 *
+./tar.sh</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

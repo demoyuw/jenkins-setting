@@ -1,0 +1,28 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin@1.5.5">
+      <gitLabConnection>iServCloud Git</gitLabConnection>
+    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>rsync -avP isc-tempest localadmin@10.50.0.91:~/
+ssh localadmin@10.50.0.91 &quot;sudo chown -R localadmin.localadmin isc-tempest&quot;
+ssh localadmin@10.50.0.91 &quot;sudo chmod -R 755 isc-tempest&quot;
+ssh localadmin@10.50.0.91 &quot;sudo /home/localadmin/isc-tempest/auto_script/rally_install.sh&quot;</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
