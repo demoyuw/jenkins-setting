@@ -1,7 +1,7 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <hudson.plugins.scm__sync__configuration.ScmSyncConfigurationPlugin version="1">
   <scm class="hudson.plugins.scm_sync_configuration.scms.ScmSyncGitSCM"/>
-  <scmRepositoryUrl>scm:git:https://github.com/demoyuw/jenkins-setting.git</scmRepositoryUrl>
+  <scmRepositoryUrl>scm:git:https://3f7d42d1e86feb9ad5f7442f2d16d645c7e74dbe@github.com/demoyuw/jenkins-setting.git</scmRepositoryUrl>
   <noUserCommitMessage>false</noUserCommitMessage>
   <displayStatus>true</displayStatus>
   <commitMessagePattern>[message]</commitMessagePattern>
